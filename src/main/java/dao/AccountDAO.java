@@ -1,0 +1,164 @@
+package dao;
+
+import util.DBConnection;
+import java.sql.*;
+
+/**
+ * Account Data Access Object
+ * Handles all account-related database operations
+ */
+public class AccountDAO {
+    
+    /**
+     * Get account balance
+     * @param accountId Account ID
+     * @return Current balance
+     */
+    public double getBalance(int accountId) {
+        try {
+            Connection conn = DBConnection.getConnection();
+            String sql = "SELECT balance FROM accounts WHERE account_id = ?";
+            
+            PreparedStatement pstmt = conn.prepareStatement(sql);
+            pstmt.setInt(1, accountId);
+            
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                return rs.getDouble("balance");
+            }
+            
+        } catch (SQLException e) {
+            System.err.println("Error getting balance: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return 0.0;
+    }
+    
+    /**
+     * Update account balance
+     * @param accountId Account ID
+     * @param newBalance New balance amount
+     * @return true if update successful
+     */
+    public boolean updateBalance(int accountId, double newBalance) {
+        try {
+            Connection conn = DBConnection.getConnection();
+            String sql = "UPDATE accounts SET balance = ? WHERE account_id = ?";
+            
+            PreparedStatement pstmt = conn.prepareStatement(sql);
+            pstmt.setDouble(1, newBalance);
+            pstmt.setInt(2, accountId);
+            
+            int rowsAffected = pstmt.executeUpdate();
+            return rowsAffected > 0;
+            
+        } catch (SQLException e) {
+            System.err.println("Error updating balance: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
+    }
+    
+    /**
+     * Check if account exists
+     * @param accountId Account ID to check
+     * @return true if exists, false otherwise
+     */
+    public boolean accountExists(int accountId) {
+        try {
+            Connection conn = DBConnection.getConnection();
+            String sql = "SELECT COUNT(*) FROM accounts WHERE account_id = ?";
+            
+            PreparedStatement pstmt = conn.prepareStatement(sql);
+            pstmt.setInt(1, accountId);
+            
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1) > 0;
+            }
+            
+        } catch (SQLException e) {
+            System.err.println("Error checking account: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return false;
+    }
+    
+    /**
+     * Get account ID by user ID
+     * @param userId User ID
+     * @return Account ID
+     */
+    public int getAccountIdByUserId(int userId) {
+        try {
+            Connection conn = DBConnection.getConnection();
+            String sql = "SELECT account_id FROM accounts WHERE user_id = ?";
+            
+            PreparedStatement pstmt = conn.prepareStatement(sql);
+            pstmt.setInt(1, userId);
+            
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt("account_id");
+            }
+            
+        } catch (SQLException e) {
+            System.err.println("Error getting account ID: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return -1;
+    }
+    
+    /**
+     * Get account by user ID
+     * @param userId User ID
+     * @return ResultSet with account details or null
+     */
+    public ResultSet getAccountByUserId(int userId) {
+        try {
+            Connection conn = DBConnection.getConnection();
+            String sql = "SELECT account_id, balance FROM accounts WHERE user_id = ?";
+            
+            PreparedStatement pstmt = conn.prepareStatement(sql);
+            pstmt.setInt(1, userId);
+            
+            return pstmt.executeQuery();
+            
+        } catch (SQLException e) {
+            System.err.println("Error getting account: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return null;
+    }
+    
+    /**
+     * Create new account for user
+     * @param userId User ID
+     * @param initialBalance Initial balance
+     * @return Account ID of newly created account, or -1 if failed
+     */
+    public int createAccount(int userId, double initialBalance) {
+        try {
+            Connection conn = DBConnection.getConnection();
+            String sql = "INSERT INTO accounts (user_id, balance) VALUES (?, ?)";
+            
+            PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+            pstmt.setInt(1, userId);
+            pstmt.setDouble(2, initialBalance);
+            
+            int rowsAffected = pstmt.executeUpdate();
+            
+            if (rowsAffected > 0) {
+                ResultSet rs = pstmt.getGeneratedKeys();
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+            
+        } catch (SQLException e) {
+            System.err.println("Error creating account: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return -1;
+    }
+}
