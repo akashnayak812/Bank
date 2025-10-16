@@ -68,7 +68,7 @@
                 <label for="amount">Withdrawal Amount (₹)</label>
                 <input type="number" id="amount" name="amount" 
                        placeholder="Enter amount to withdraw" 
-                       required min="0.01" step="0.01" max="<%= balance %>">
+                       required min="0.01" step="0.01">
             </div>
             
             <div class="form-actions">
