@@ -47,6 +47,7 @@ CREATE TABLE transactions (
     amount DECIMAL(12,2) NOT NULL CHECK (amount > 0),
     txn_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     status VARCHAR(50) DEFAULT 'SUCCESS',
+    transaction_type VARCHAR(20) DEFAULT 'TRANSFER',
     description VARCHAR(255),
     FOREIGN KEY (sender_account) REFERENCES accounts(account_id),
     FOREIGN KEY (receiver_account) REFERENCES accounts(account_id),
@@ -75,11 +76,11 @@ INSERT INTO accounts (user_id, balance) VALUES
 (4, 3000.00);
 
 -- Insert sample transactions
-INSERT INTO transactions (sender_account, receiver_account, amount, status) VALUES
-(1, 2, 500.00, 'SUCCESS'),
-(2, 3, 1000.00, 'SUCCESS'),
-(3, 1, 250.00, 'SUCCESS'),
-(4, 2, 750.00, 'SUCCESS');
+INSERT INTO transactions (sender_account, receiver_account, amount, status, transaction_type) VALUES
+(1, 2, 500.00, 'SUCCESS', 'TRANSFER'),
+(2, 3, 1000.00, 'SUCCESS', 'TRANSFER'),
+(3, 1, 250.00, 'SUCCESS', 'TRANSFER'),
+(4, 2, 750.00, 'SUCCESS', 'TRANSFER');
 
 -- ==================
 -- Verification Queries
