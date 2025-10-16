@@ -52,13 +52,6 @@ public class WithdrawServlet extends HttpServlet {
             
             double amount = Double.parseDouble(amountStr);
             
-            // Validation: Check for NaN or Infinity
-            if (Double.isNaN(amount) || Double.isInfinite(amount)) {
-                request.setAttribute("error", "Invalid amount!");
-                request.getRequestDispatcher("withdraw.jsp").forward(request, response);
-                return;
-            }
-            
             // Validation: Check for negative or zero amount
             if (amount <= 0) {
                 request.setAttribute("error", "Amount must be greater than zero!");
