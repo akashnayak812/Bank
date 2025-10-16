@@ -74,29 +74,31 @@ CREATE TABLE transactions (
 ```
 /Bank/
   ├── src/
-  │   ├── dao/
-  │   │   ├── UserDAO.java              # User database operations
-  │   │   ├── AccountDAO.java           # Account management
-  │   │   └── TransactionDAO.java       # Transaction handling (ACID)
-  │   ├── servlets/
-  │   │   ├── LoginServlet.java         # User authentication
-  │   │   ├── SignupServlet.java        # User registration
-  │   │   ├── TransferServlet.java      # Money transfer
-  │   │   ├── DashboardServlet.java     # Dashboard display
-  │   │   ├── TransactionHistoryServlet.java  # Transaction history
-  │   │   └── LogoutServlet.java        # User logout
-  │   └── util/
-  │       └── DBConnection.java         # Database connection utility
-  ├── webapp/
-  │   ├── login.jsp                     # Login page
-  │   ├── signup.jsp                    # Registration page
-  │   ├── dashboard.jsp                 # User dashboard
-  │   ├── transfer.jsp                  # Money transfer page
-  │   ├── transactions.jsp              # Transaction history page
-  │   └── css/
-  │       └── style.css                 # Modern responsive styles
-  ├── WEB-INF/
-  │   └── web.xml                       # Web application configuration
+  │   └── main/
+  │       ├── java/
+  │       │   ├── dao/
+  │       │   │   ├── UserDAO.java              # User database operations
+  │       │   │   ├── AccountDAO.java           # Account management
+  │       │   │   └── TransactionDAO.java       # Transaction handling (ACID)
+  │       │   ├── servlets/
+  │       │   │   ├── LoginServlet.java         # User authentication
+  │       │   │   ├── SignupServlet.java        # User registration
+  │       │   │   ├── TransferServlet.java      # Money transfer
+  │       │   │   ├── DashboardServlet.java     # Dashboard display
+  │       │   │   ├── TransactionHistoryServlet.java  # Transaction history
+  │       │   │   └── LogoutServlet.java        # User logout
+  │       │   └── util/
+  │       │       └── DBConnection.java         # Database connection utility
+  │       └── webapp/
+  │           ├── login.jsp                     # Login page
+  │           ├── signup.jsp                    # Registration page
+  │           ├── dashboard.jsp                 # User dashboard
+  │           ├── transfer.jsp                  # Money transfer page
+  │           ├── transactions.jsp              # Transaction history page
+  │           ├── css/
+  │           │   └── style.css                 # Modern responsive styles
+  │           └── WEB-INF/
+  │               └── web.xml                   # Web application configuration
   ├── database/
   │   └── setup.sql                     # Database setup script
   └── pom.xml                           # Maven dependencies
@@ -119,7 +121,7 @@ CREATE TABLE transactions (
 mysql -u root -p < database/setup.sql
 ```
 
-3. Update database credentials in `src/util/DBConnection.java`:
+3. Update database credentials in `src/main/java/util/DBConnection.java`:
 
 ```java
 private static final String URL = "jdbc:mysql://localhost:3306/online_banking";
@@ -148,10 +150,10 @@ This will:
 3. Start Tomcat server
 4. Access the application at: `http://localhost:8080/online-banking/`
 
-**Option 2: Using Maven Tomcat Plugin**
+**Option 2: Using Maven Cargo Plugin**
 
 ```bash
-mvn tomcat7:run
+mvn clean package cargo:run
 ```
 
 Access at: `http://localhost:8080/banking/`
