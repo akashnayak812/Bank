@@ -32,6 +32,7 @@
         <div class="nav-links">
             <a href="DashboardServlet">Dashboard</a>
             <a href="TransferServlet">Transfer Money</a>
+            <a href="WithdrawServlet">Withdraw</a>
             <a href="TransactionHistoryServlet">Transactions</a>
             <a href="LogoutServlet" class="logout-btn">Logout</a>
         </div>
@@ -61,9 +62,9 @@
                     <tbody>
                         <% for (Map<String, Object> txn : transactions) { 
                             String type = (String) txn.get("type");
-                            String typeClass = type.equals("SENT") ? "type-sent" : "type-received";
-                            String amountClass = type.equals("SENT") ? "amount-negative" : "amount-positive";
-                            String amountSign = type.equals("SENT") ? "- ₹" : "+ ₹";
+                            String typeClass = "WITHDRAWAL".equals(type) ? "type-withdrawal" : (type.equals("SENT") ? "type-sent" : "type-received");
+                            String amountClass = "WITHDRAWAL".equals(type) ? "amount-negative" : (type.equals("SENT") ? "amount-negative" : "amount-positive");
+                            String amountSign = "WITHDRAWAL".equals(type) ? "- ₹" : (type.equals("SENT") ? "- ₹" : "+ ₹");
                         %>
                             <tr>
                                 <td>#<%= txn.get("txnId") %></td>
