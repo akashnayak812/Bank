@@ -472,6 +472,11 @@ h4 {
     color: #008800;
 }
 
+.type-withdrawal {
+    background: #fff3cd;
+    color: #856404;
+}
+
 .badge-success {
     background: #d4edda;
     color: #155724;
