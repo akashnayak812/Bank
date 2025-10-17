@@ -215,10 +215,7 @@ public class TransactionDAO {
                 if (pstmtTransaction != null) pstmtTransaction.close();
                 if (pstmtDebit != null) pstmtDebit.close();
                 if (pstmtCheckBalance != null) pstmtCheckBalance.close();
-                if (conn != null) {
-                    conn.setAutoCommit(true);
-                    conn.close();
-                }
+                if (conn != null) conn.setAutoCommit(true);
             } catch (SQLException e) {
                 e.printStackTrace();
             }
