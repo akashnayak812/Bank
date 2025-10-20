@@ -229,4 +229,67 @@ public class AccountDAO {
         }
         return -1;
     }
+
+    /**
+     * Deposit funds into an account
+     * @param accountId Account ID
+     * @param amount Amount to deposit
+     * @return true if deposit successful
+     */
+    public boolean deposit(int accountId, double amount) {
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        
+        try {
+            conn = DBConnection.getConnection();
+            conn.setAutoCommit(false); // Start transaction
+            
+            // Lock the row and get current balance
+            String lockSql = "SELECT balance FROM accounts WHERE account_id = ? FOR UPDATE";
+            pstmt = conn.prepareStatement(lockSql);
+            pstmt.setInt(1, accountId);
+            ResultSet rs = pstmt.executeQuery();
+            
+            if (rs.next()) {
+                double currentBalance = rs.getDouble("balance");
+                double newBalance = currentBalance + amount;
+                
+                // Update the balance
+                String updateSql = "UPDATE accounts SET balance = ? WHERE account_id = ?";
+                pstmt = conn.prepareStatement(updateSql);
+                pstmt.setDouble(1, newBalance);
+                pstmt.setInt(2, accountId);
+                
+                int rowsAffected = pstmt.executeUpdate();
+                
+                if (rowsAffected > 0) {
+                    conn.commit(); // Commit transaction
+                    return true;
+                }
+            }
+            
+            conn.rollback(); // Rollback if something went wrong
+            return false;
+            
+        } catch (SQLException e) {
+            System.err.println("Error during deposit: " + e.getMessage());
+            e.printStackTrace();
+            try {
+                if (conn != null) conn.rollback();
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
+            return false;
+        } finally {
+            try {
+                if (pstmt != null) pstmt.close();
+                if (conn != null) {
+                    conn.setAutoCommit(true);
+                    conn.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 }

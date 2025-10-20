@@ -29,6 +29,7 @@
         </div>
         <div class="nav-links">
             <a href="DashboardServlet">Dashboard</a>
+            <a href="DepositServlet">Deposit</a>
             <a href="TransferServlet">Transfer Money</a>
             <a href="WithdrawServlet">Withdraw</a>
             <a href="TransactionHistoryServlet">Transactions</a>
@@ -64,6 +65,10 @@
         <div class="quick-actions">
             <h3>Quick Actions</h3>
             <div class="action-buttons">
+                <a href="DepositServlet" class="action-btn">
+                    <div class="action-icon">💵</div>
+                    <div class="action-text">Deposit Money</div>
+                </a>
                 <a href="TransferServlet" class="action-btn">
                     <div class="action-icon">💸</div>
                     <div class="action-text">Transfer Money</div>
