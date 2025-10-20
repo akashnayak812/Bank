@@ -46,6 +46,7 @@ public class UserDAO {
     public int registerUser(String name, String email, String password) {
         Connection conn = null;
         PreparedStatement pstmt = null;
+        ResultSet rs = null;
         
         try {
             conn = DBConnection.getConnection();
@@ -64,7 +65,7 @@ public class UserDAO {
             
             if (rowsAffected > 0) {
                 // Get the generated user_id
-                ResultSet rs = pstmt.getGeneratedKeys();
+                rs = pstmt.getGeneratedKeys();
                 if (rs.next()) {
                     int userId = rs.getInt(1);
                     System.out.println("User registered successfully: " + email);
@@ -82,7 +83,9 @@ public class UserDAO {
         } finally {
             // Close resources
             try {
+                if (rs != null) rs.close();
                 if (pstmt != null) pstmt.close();
+                if (conn != null) conn.close();
             } catch (SQLException e) {
                 e.printStackTrace();
             }
@@ -96,8 +99,11 @@ public class UserDAO {
      * @return User data as ResultSet if valid, null otherwise
      */
     public ResultSet loginUser(String email, String password) {
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        
         try {
-            Connection conn = DBConnection.getConnection();
+            conn = DBConnection.getConnection();
             
             // Hash the input password
             String hashedPassword = hashPassword(password);
@@ -108,7 +114,7 @@ public class UserDAO {
                         "LEFT JOIN accounts a ON u.user_id = a.user_id " +
                         "WHERE u.email = ? AND u.password_hash = ?";
             
-            PreparedStatement pstmt = conn.prepareStatement(sql);
+            pstmt = conn.prepareStatement(sql);
             pstmt.setString(1, email);
             pstmt.setString(2, hashedPassword);
             
@@ -119,12 +125,26 @@ public class UserDAO {
                 return rs;
             } else {
                 System.out.println("Invalid credentials for: " + email);
+                // Clean up resources when login fails
+                try {
+                    if (pstmt != null) pstmt.close();
+                    if (conn != null) conn.close();
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                }
                 return null;
             }
             
         } catch (SQLException e) {
             System.err.println("Error during login: " + e.getMessage());
             e.printStackTrace();
+            // Clean up resources on error
+            try {
+                if (pstmt != null) pstmt.close();
+                if (conn != null) conn.close();
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
             return null;
         }
     }
@@ -135,20 +155,32 @@ public class UserDAO {
      * @return true if exists, false otherwise
      */
     public boolean emailExists(String email) {
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        
         try {
-            Connection conn = DBConnection.getConnection();
+            conn = DBConnection.getConnection();
             String sql = "SELECT COUNT(*) FROM users WHERE email = ?";
             
-            PreparedStatement pstmt = conn.prepareStatement(sql);
+            pstmt = conn.prepareStatement(sql);
             pstmt.setString(1, email);
             
-            ResultSet rs = pstmt.executeQuery();
+            rs = pstmt.executeQuery();
             if (rs.next()) {
                 return rs.getInt(1) > 0;
             }
             
         } catch (SQLException e) {
             e.printStackTrace();
+        } finally {
+            try {
+                if (rs != null) rs.close();
+                if (pstmt != null) pstmt.close();
+                if (conn != null) conn.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
         }
         return false;
     }

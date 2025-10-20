@@ -7,7 +7,7 @@ import java.sql.SQLException;
 /**
  * Database Connection Utility
  * Provides centralized database connection management
- * Uses Singleton pattern to maintain a single connection instance
+ * Returns a new connection for each request to ensure proper transaction isolation
  */
 public class DBConnection {
     
@@ -16,30 +16,30 @@ public class DBConnection {
     private static final String USERNAME = "root";
     private static final String PASSWORD = "Hsaka@100";
     
-    private static Connection connection = null;
+    // Static initializer to load the JDBC driver once
+    static {
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver");
+            System.out.println("MySQL JDBC Driver loaded successfully!");
+        } catch (ClassNotFoundException e) {
+            System.err.println("MySQL JDBC Driver not found!");
+            e.printStackTrace();
+        }
+    }
     
     /**
-     * Get database connection
+     * Get a new database connection
+     * Returns a fresh connection for each call to ensure proper transaction isolation
+     * 
      * @return Connection object
      * @throws SQLException if connection fails
      */
     public static Connection getConnection() throws SQLException {
         try {
-            // Load MySQL JDBC Driver
-            Class.forName("com.mysql.cj.jdbc.Driver");
-            
-            // Create connection if not exists
-            if (connection == null || connection.isClosed()) {
-                connection = DriverManager.getConnection(URL, USERNAME, PASSWORD);
-                System.out.println("Database connected successfully!");
-            }
-            
+            Connection connection = DriverManager.getConnection(URL, USERNAME, PASSWORD);
+            System.out.println("Database connected successfully!");
             return connection;
             
-        } catch (ClassNotFoundException e) {
-            System.err.println("MySQL JDBC Driver not found!");
-            e.printStackTrace();
-            throw new SQLException("Driver not found", e);
         } catch (SQLException e) {
             System.err.println("Failed to connect to database!");
             e.printStackTrace();
@@ -49,8 +49,9 @@ public class DBConnection {
     
     /**
      * Close database connection
+     * @param connection Connection to close
      */
-    public static void closeConnection() {
+    public static void closeConnection(Connection connection) {
         try {
             if (connection != null && !connection.isClosed()) {
                 connection.close();

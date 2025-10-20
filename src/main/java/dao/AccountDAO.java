@@ -15,14 +15,18 @@ public class AccountDAO {
      * @return Current balance
      */
     public double getBalance(int accountId) {
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        
         try {
-            Connection conn = DBConnection.getConnection();
+            conn = DBConnection.getConnection();
             String sql = "SELECT balance FROM accounts WHERE account_id = ?";
             
-            PreparedStatement pstmt = conn.prepareStatement(sql);
+            pstmt = conn.prepareStatement(sql);
             pstmt.setInt(1, accountId);
             
-            ResultSet rs = pstmt.executeQuery();
+            rs = pstmt.executeQuery();
             if (rs.next()) {
                 return rs.getDouble("balance");
             }
@@ -30,6 +34,14 @@ public class AccountDAO {
         } catch (SQLException e) {
             System.err.println("Error getting balance: " + e.getMessage());
             e.printStackTrace();
+        } finally {
+            try {
+                if (rs != null) rs.close();
+                if (pstmt != null) pstmt.close();
+                if (conn != null) conn.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
         }
         return 0.0;
     }
@@ -41,11 +53,14 @@ public class AccountDAO {
      * @return true if update successful
      */
     public boolean updateBalance(int accountId, double newBalance) {
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        
         try {
-            Connection conn = DBConnection.getConnection();
+            conn = DBConnection.getConnection();
             String sql = "UPDATE accounts SET balance = ? WHERE account_id = ?";
             
-            PreparedStatement pstmt = conn.prepareStatement(sql);
+            pstmt = conn.prepareStatement(sql);
             pstmt.setDouble(1, newBalance);
             pstmt.setInt(2, accountId);
             
@@ -56,6 +71,13 @@ public class AccountDAO {
             System.err.println("Error updating balance: " + e.getMessage());
             e.printStackTrace();
             return false;
+        } finally {
+            try {
+                if (pstmt != null) pstmt.close();
+                if (conn != null) conn.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
         }
     }
     
@@ -65,14 +87,18 @@ public class AccountDAO {
      * @return true if exists, false otherwise
      */
     public boolean accountExists(int accountId) {
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        
         try {
-            Connection conn = DBConnection.getConnection();
+            conn = DBConnection.getConnection();
             String sql = "SELECT COUNT(*) FROM accounts WHERE account_id = ?";
             
-            PreparedStatement pstmt = conn.prepareStatement(sql);
+            pstmt = conn.prepareStatement(sql);
             pstmt.setInt(1, accountId);
             
-            ResultSet rs = pstmt.executeQuery();
+            rs = pstmt.executeQuery();
             if (rs.next()) {
                 return rs.getInt(1) > 0;
             }
@@ -80,6 +106,14 @@ public class AccountDAO {
         } catch (SQLException e) {
             System.err.println("Error checking account: " + e.getMessage());
             e.printStackTrace();
+        } finally {
+            try {
+                if (rs != null) rs.close();
+                if (pstmt != null) pstmt.close();
+                if (conn != null) conn.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
         }
         return false;
     }
@@ -90,14 +124,18 @@ public class AccountDAO {
      * @return Account ID
      */
     public int getAccountIdByUserId(int userId) {
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        
         try {
-            Connection conn = DBConnection.getConnection();
+            conn = DBConnection.getConnection();
             String sql = "SELECT account_id FROM accounts WHERE user_id = ?";
             
-            PreparedStatement pstmt = conn.prepareStatement(sql);
+            pstmt = conn.prepareStatement(sql);
             pstmt.setInt(1, userId);
             
-            ResultSet rs = pstmt.executeQuery();
+            rs = pstmt.executeQuery();
             if (rs.next()) {
                 return rs.getInt("account_id");
             }
@@ -105,6 +143,14 @@ public class AccountDAO {
         } catch (SQLException e) {
             System.err.println("Error getting account ID: " + e.getMessage());
             e.printStackTrace();
+        } finally {
+            try {
+                if (rs != null) rs.close();
+                if (pstmt != null) pstmt.close();
+                if (conn != null) conn.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
         }
         return -1;
     }
@@ -115,11 +161,14 @@ public class AccountDAO {
      * @return ResultSet with account details or null
      */
     public ResultSet getAccountByUserId(int userId) {
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        
         try {
-            Connection conn = DBConnection.getConnection();
+            conn = DBConnection.getConnection();
             String sql = "SELECT account_id, balance FROM accounts WHERE user_id = ?";
             
-            PreparedStatement pstmt = conn.prepareStatement(sql);
+            pstmt = conn.prepareStatement(sql);
             pstmt.setInt(1, userId);
             
             return pstmt.executeQuery();
@@ -127,6 +176,13 @@ public class AccountDAO {
         } catch (SQLException e) {
             System.err.println("Error getting account: " + e.getMessage());
             e.printStackTrace();
+            // Clean up resources on error
+            try {
+                if (pstmt != null) pstmt.close();
+                if (conn != null) conn.close();
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
         }
         return null;
     }
@@ -138,18 +194,22 @@ public class AccountDAO {
      * @return Account ID of newly created account, or -1 if failed
      */
     public int createAccount(int userId, double initialBalance) {
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+        
         try {
-            Connection conn = DBConnection.getConnection();
+            conn = DBConnection.getConnection();
             String sql = "INSERT INTO accounts (user_id, balance) VALUES (?, ?)";
             
-            PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+            pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
             pstmt.setInt(1, userId);
             pstmt.setDouble(2, initialBalance);
             
             int rowsAffected = pstmt.executeUpdate();
             
             if (rowsAffected > 0) {
-                ResultSet rs = pstmt.getGeneratedKeys();
+                rs = pstmt.getGeneratedKeys();
                 if (rs.next()) {
                     return rs.getInt(1);
                 }
@@ -158,6 +218,14 @@ public class AccountDAO {
         } catch (SQLException e) {
             System.err.println("Error creating account: " + e.getMessage());
             e.printStackTrace();
+        } finally {
+            try {
+                if (rs != null) rs.close();
+                if (pstmt != null) pstmt.close();
+                if (conn != null) conn.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
         }
         return -1;
     }

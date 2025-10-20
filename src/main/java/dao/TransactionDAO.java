@@ -29,6 +29,7 @@ public class TransactionDAO {
         PreparedStatement pstmtDebit = null;
         PreparedStatement pstmtCredit = null;
         PreparedStatement pstmtTransaction = null;
+        ResultSet rs = null;
         
         try {
             conn = DBConnection.getConnection();
@@ -40,7 +41,7 @@ public class TransactionDAO {
             String checkBalanceSql = "SELECT balance FROM accounts WHERE account_id = ? FOR UPDATE";
             pstmtCheckBalance = conn.prepareStatement(checkBalanceSql);
             pstmtCheckBalance.setInt(1, senderAccountId);
-            ResultSet rs = pstmtCheckBalance.executeQuery();
+            rs = pstmtCheckBalance.executeQuery();
             
             if (!rs.next()) {
                 System.err.println("Sender account not found!");
@@ -115,11 +116,15 @@ public class TransactionDAO {
         } finally {
             // Close all resources
             try {
+                if (rs != null) rs.close();
                 if (pstmtTransaction != null) pstmtTransaction.close();
                 if (pstmtCredit != null) pstmtCredit.close();
                 if (pstmtDebit != null) pstmtDebit.close();
                 if (pstmtCheckBalance != null) pstmtCheckBalance.close();
-                if (conn != null) conn.setAutoCommit(true);
+                if (conn != null) {
+                    conn.setAutoCommit(true);
+                    conn.close();
+                }
             } catch (SQLException e) {
                 e.printStackTrace();
             }
@@ -139,6 +144,7 @@ public class TransactionDAO {
         PreparedStatement pstmtCheckBalance = null;
         PreparedStatement pstmtDebit = null;
         PreparedStatement pstmtTransaction = null;
+        ResultSet rs = null;
         
         try {
             conn = DBConnection.getConnection();
@@ -150,7 +156,7 @@ public class TransactionDAO {
             String checkBalanceSql = "SELECT balance FROM accounts WHERE account_id = ? FOR UPDATE";
             pstmtCheckBalance = conn.prepareStatement(checkBalanceSql);
             pstmtCheckBalance.setInt(1, accountId);
-            ResultSet rs = pstmtCheckBalance.executeQuery();
+            rs = pstmtCheckBalance.executeQuery();
             
             if (!rs.next()) {
                 System.err.println("Account not found!");
@@ -212,10 +218,14 @@ public class TransactionDAO {
         } finally {
             // Close all resources
             try {
+                if (rs != null) rs.close();
                 if (pstmtTransaction != null) pstmtTransaction.close();
                 if (pstmtDebit != null) pstmtDebit.close();
                 if (pstmtCheckBalance != null) pstmtCheckBalance.close();
-                if (conn != null) conn.setAutoCommit(true);
+                if (conn != null) {
+                    conn.setAutoCommit(true);
+                    conn.close();
+                }
             } catch (SQLException e) {
                 e.printStackTrace();
             }
@@ -229,9 +239,12 @@ public class TransactionDAO {
      */
     public List<Map<String, Object>> getTransactionHistory(int accountId) {
         List<Map<String, Object>> transactions = new ArrayList<>();
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
         
         try {
-            Connection conn = DBConnection.getConnection();
+            conn = DBConnection.getConnection();
             
             // Query to get all transactions where user is sender or receiver
             String sql = "SELECT txn_id, sender_account, receiver_account, amount, txn_date, status, transaction_type " +
@@ -240,11 +253,11 @@ public class TransactionDAO {
                         "ORDER BY txn_date DESC " +
                         "LIMIT 50";
             
-            PreparedStatement pstmt = conn.prepareStatement(sql);
+            pstmt = conn.prepareStatement(sql);
             pstmt.setInt(1, accountId);
             pstmt.setInt(2, accountId);
             
-            ResultSet rs = pstmt.executeQuery();
+            rs = pstmt.executeQuery();
             
             while (rs.next()) {
                 Map<String, Object> transaction = new HashMap<>();
@@ -275,6 +288,14 @@ public class TransactionDAO {
         } catch (SQLException e) {
             System.err.println("Error fetching transactions: " + e.getMessage());
             e.printStackTrace();
+        } finally {
+            try {
+                if (rs != null) rs.close();
+                if (pstmt != null) pstmt.close();
+                if (conn != null) conn.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
         }
         
         return transactions;
@@ -288,12 +309,15 @@ public class TransactionDAO {
      * @param reason Failure reason
      */
     public void recordFailedTransaction(int senderAccountId, int receiverAccountId, double amount, String reason) {
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        
         try {
-            Connection conn = DBConnection.getConnection();
+            conn = DBConnection.getConnection();
             String sql = "INSERT INTO transactions (sender_account, receiver_account, amount, status, transaction_type) " +
                         "VALUES (?, ?, ?, ?, 'TRANSFER')";
             
-            PreparedStatement pstmt = conn.prepareStatement(sql);
+            pstmt = conn.prepareStatement(sql);
             pstmt.setInt(1, senderAccountId);
             pstmt.setInt(2, receiverAccountId);
             pstmt.setDouble(3, amount);
@@ -304,6 +328,13 @@ public class TransactionDAO {
         } catch (SQLException e) {
             System.err.println("Error recording failed transaction: " + e.getMessage());
             e.printStackTrace();
+        } finally {
+            try {
+                if (pstmt != null) pstmt.close();
+                if (conn != null) conn.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
         }
     }
 }
