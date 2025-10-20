@@ -94,14 +94,16 @@ finally {
         if (pstmtDebit != null) pstmtDebit.close();
         if (pstmtCheckBalance != null) pstmtCheckBalance.close();
         if (conn != null) {
-            conn.setAutoCommit(true);  // Restore autoCommit
-            conn.close();               // Close connection
+            conn.setAutoCommit(true);  // Restore autoCommit before closing (defensive coding)
+            conn.close();               // Close connection - returns it to available pool
         }
     } catch (SQLException e) {
         e.printStackTrace();
     }
 }
 ```
+
+**Note**: Setting `autoCommit(true)` before closing is defensive coding practice. While fresh connections have autoCommit=true by default, explicitly setting it ensures clean state if connection pooling is added later.
 
 ### 4. Updated UserDAO.java
 Added proper resource cleanup in authentication methods:
@@ -212,9 +214,49 @@ Created `TRANSACTION_FIX_GUIDE.md` with:
 ## Performance Considerations
 
 The fix changes from singleton to per-request connections:
-- **Trade-off**: Slight overhead of creating connections per request
+- **Trade-off**: Creates a new connection for each request
 - **Benefit**: Correct behavior, transaction isolation, thread safety
-- **Best Practice**: For production, consider using connection pooling (HikariCP, Apache DBCP)
+- **Current Implementation**: Direct JDBC connections without pooling
+
+### Production Recommendations
+For production deployment, **connection pooling is strongly recommended**:
+
+**Why Connection Pooling?**
+- Reuses connections instead of creating new ones
+- Significantly reduces connection overhead
+- Prevents connection exhaustion under high load
+- Maintains performance while ensuring transaction isolation
+
+**Recommended Connection Pools**:
+1. **HikariCP** (Recommended - fastest, most popular)
+   ```xml
+   <dependency>
+       <groupId>com.zaxxer</groupId>
+       <artifactId>HikariCP</artifactId>
+       <version>5.0.1</version>
+   </dependency>
+   ```
+
+2. **Apache DBCP2** (Mature, widely used)
+3. **Tomcat JDBC Pool** (If using Tomcat)
+
+**Example HikariCP Configuration**:
+```java
+HikariConfig config = new HikariConfig();
+config.setJdbcUrl("jdbc:mysql://localhost:3306/online_banking");
+config.setUsername("root");
+config.setPassword("password");
+config.setMaximumPoolSize(10);  // Max connections in pool
+config.setMinimumIdle(5);       // Min idle connections
+HikariDataSource dataSource = new HikariDataSource(config);
+```
+
+**Without connection pooling**: Under high load (100+ concurrent users), the application may experience:
+- Slow response times due to connection creation overhead
+- Database connection limits exceeded
+- Resource exhaustion (too many open connections)
+
+**With connection pooling**: The application can handle 1000+ concurrent users efficiently while maintaining proper transaction isolation.
 
 ## Conclusion
 
